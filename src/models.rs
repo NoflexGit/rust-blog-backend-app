@@ -1,11 +1,11 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Selectable)]
+#[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::posts)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Post {
-    pub id: Option<i32>,
+    pub id: i32,
     pub author_id: i32,
     pub title: String,
     pub content: String,

@@ -4,7 +4,6 @@ use diesel::{connection, prelude::*};
 use dotenv::dotenv;
 use models::{NewPost, Post};
 use schema::posts::dsl::*;
-use std::env;
 use std::fmt::Error;
 
 mod api;
@@ -32,13 +31,22 @@ impl Database {
         Database { pool }
     }
 
-    pub fn get_posts(&self) -> Vec<Post> {
-        posts
+    pub fn get_posts(&self) -> Result<Vec<Post>, Error> {
+        let todos = posts
             .load::<Post>(&mut self.pool.get().unwrap())
-            .expect("Error loading all todos")
+            .expect("Error loading all todos");
+        Ok(todos)
     }
 
-    pub fn create_todo(&self, post: NewPost) -> Result<NewPost, Error> {
+    pub fn get_post(&self, post_id: i32) -> Result<Post, Error> {
+        let post = posts
+            .find(post_id)
+            .first(&mut self.pool.get().unwrap())
+            .expect("Error loading todo");
+        Ok(post)
+    }
+
+    pub fn create_post(&self, post: NewPost) -> Result<NewPost, Error> {
         let post = NewPost {
             author_id: post.author_id,
             title: post.title,
@@ -49,6 +57,21 @@ impl Database {
             .execute(&mut self.pool.get().unwrap())
             .expect("Error creating new todo");
         Ok(post)
+    }
+
+    pub fn delete_post(&self, post_id: i32) -> Result<(), Error> {
+        if posts
+            .find(post_id)
+            .first::<Post>(&mut self.pool.get().unwrap())
+            .is_err()
+        {
+            return Err(Error);
+        }
+
+        diesel::delete(posts.filter(id.eq(post_id)))
+            .execute(&mut self.pool.get().unwrap())
+            .expect("Error deleting todo");
+        Ok(())
     }
 }
 
