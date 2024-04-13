@@ -1,19 +1,21 @@
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
-use diesel::{connection, prelude::*};
 use dotenv::dotenv;
 use models::{NewPost, Post};
 use schema::posts::dsl::*;
 use std::fmt::Error;
+use uuid::Uuid;
 
 mod api;
 mod models;
 mod schema;
 
-type DBPoolSqlite = r2d2::Pool<ConnectionManager<SqliteConnection>>;
+type DBPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
 pub struct Database {
-    pool: DBPoolSqlite,
+    pool: DBPool,
 }
 
 async fn not_found() -> impl Responder {
@@ -24,8 +26,8 @@ impl Database {
     pub fn new() -> Self {
         dotenv().ok();
         let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        let manager = ConnectionManager::<SqliteConnection>::new(database_url);
-        let pool: DBPoolSqlite = r2d2::Pool::builder()
+        let manager = ConnectionManager::<PgConnection>::new(database_url);
+        let pool: DBPool = r2d2::Pool::builder()
             .build(manager)
             .expect("Failed to create pool.");
         Database { pool }
@@ -38,7 +40,7 @@ impl Database {
         Ok(todos)
     }
 
-    pub fn get_post(&self, post_id: i32) -> Result<Post, Error> {
+    pub fn get_post(&self, post_id: String) -> Result<Post, Error> {
         let post = posts
             .find(post_id)
             .first(&mut self.pool.get().unwrap())
@@ -47,10 +49,12 @@ impl Database {
     }
 
     pub fn create_post(&self, post: NewPost) -> Result<NewPost, Error> {
+        let uuid = Uuid::new_v4().to_string();
+
         let post = NewPost {
-            author_id: post.author_id,
+            id: Some(uuid),
             title: post.title,
-            content: post.content,
+            body: post.body,
         };
         diesel::insert_into(posts)
             .values(&post)
@@ -59,9 +63,9 @@ impl Database {
         Ok(post)
     }
 
-    pub fn delete_post(&self, post_id: i32) -> Result<(), Error> {
+    pub fn delete_post(&self, post_id: String) -> Result<(), Error> {
         if posts
-            .find(post_id)
+            .find(&post_id)
             .first::<Post>(&mut self.pool.get().unwrap())
             .is_err()
         {

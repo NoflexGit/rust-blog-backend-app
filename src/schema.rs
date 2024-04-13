@@ -2,23 +2,12 @@
 
 diesel::table! {
     posts (id) {
-        id -> Integer,
-        author_id -> Integer,
-        title -> Text,
-        content -> Text,
-        published_date -> Timestamp,
+        #[max_length = 255]
+        id -> Varchar,
+        #[max_length = 255]
+        title -> Varchar,
+        body -> Text,
+        created_at -> Nullable<Timestamp>,
+        updated_at -> Nullable<Timestamp>,
     }
 }
-
-diesel::table! {
-    users (id) {
-        id -> Integer,
-        username -> Text,
-        email -> Text,
-        password_hash -> Text,
-    }
-}
-
-diesel::joinable!(posts -> users (author_id));
-
-diesel::allow_tables_to_appear_in_same_query!(posts, users,);

@@ -21,7 +21,7 @@ pub async fn get_todos(db: web::Data<Database>) -> HttpResponse {
 }
 
 #[delete("/posts/{id}")]
-pub async fn delete_todo(db: web::Data<Database>, path: web::Path<i32>) -> HttpResponse {
+pub async fn delete_todo(db: web::Data<Database>, path: web::Path<String>) -> HttpResponse {
     let id = path.into_inner();
     let todo = db.delete_post(id);
     match todo {
@@ -31,7 +31,7 @@ pub async fn delete_todo(db: web::Data<Database>, path: web::Path<i32>) -> HttpR
 }
 
 #[get("/posts/{id}")]
-pub async fn get_post(db: web::Data<Database>, path: web::Path<i32>) -> HttpResponse {
+pub async fn get_post(db: web::Data<Database>, path: web::Path<String>) -> HttpResponse {
     let id = path.into_inner();
     let post = db.get_post(id);
     match post {

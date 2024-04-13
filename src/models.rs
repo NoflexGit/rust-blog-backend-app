@@ -3,19 +3,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::posts)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Post {
-    pub id: i32,
-    pub author_id: i32,
+    pub id: String,
     pub title: String,
-    pub content: String,
-    pub published_date: chrono::NaiveDateTime,
+    pub body: String,
+    pub created_at: Option<chrono::NaiveDateTime>,
+    pub updated_at: Option<chrono::NaiveDateTime>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::posts)]
 pub struct NewPost {
-    pub author_id: i32,
+    pub id: Option<String>,
     pub title: String,
-    pub content: String,
+    pub body: String,
 }
